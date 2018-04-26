@@ -1,0 +1,8 @@
+#here are the notes of how to use the venv in this directory
+
+in order to activate the virtual environment run
+source venv/Scripts/activate
+
+
+To deactivate the venv run
+deactivate
