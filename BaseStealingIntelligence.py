@@ -30,8 +30,8 @@ colors = ['b', 'm', 'k', 'b', 'm', 'y', 'k']
 def index():
     return render_template('index.html')
 
-@app.route('/wSBPlot', defaults={'degree':5, 'firstName':"", 'lastname':""})
-@app.route('/wSBPlot/<int:degree>', defaults={'firstName':"", 'lastname':""})
+@app.route('/wSBPlot', defaults={'degree':5, 'firstName':"", 'lastName':""})
+@app.route('/wSBPlot/<int:degree>', defaults={'firstName':"", 'lastName':""})
 @app.route('/wSBPlot/<int:degree>/<string:firstName>/<string:lastName>')
 def wSBPlot(degree, firstName, lastName):
     masterFig, _ = wSB_master_plot(degToPlot=degree, firstName=firstName, lastName=lastName)
@@ -41,8 +41,8 @@ def wSBPlot(degree, firstName, lastName):
     return send_file(img, mimetype='image/png')
 
 
-@app.route('/BSIRLinePlot', defaults={'deg': 5, 'firstName':"", 'lastname':""})
-@app.route('/BSIRLinePlot/<int:deg>', defaults={'firstName':"", 'lastname':""})
+@app.route('/BSIRLinePlot', defaults={'deg': 5, 'firstName':"", 'lastName':""})
+@app.route('/BSIRLinePlot/<int:deg>', defaults={'firstName':"", 'lastName':""})
 @app.route('/BSIRLinePlot/<int:deg>/<string:firstName>/<string:lastName>')
 def BSIRLinePlot(deg, firstName, lastName):
     masterFig, _ = BSIR_line_plot(degToPlot=deg, firstName=firstName, lastName=lastName)
@@ -252,8 +252,6 @@ if __name__ == "__main__":
     dfMaster = build_dataframe()
     build_models()
     build_BSIRs()
-    try:
-        app.run(port=environ["PORT"])
-    except KeyError:
-        app.run()
+    port = int(environ.get("PORT", 33507))
+    app.run(host='0.0.0.0', port=port)
 
