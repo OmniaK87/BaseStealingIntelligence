@@ -27,9 +27,11 @@ colors = ['b', 'm', 'k', 'b', 'm', 'y', 'k']
 def index():
     return render_template('index.html')
 
-@app.route('/wSBPlot', defaults={'degrees':[5], 'firstName':"", 'lastname':""})
-def wSBPlot():
-    masterFig, _ = wSB_master_plot()
+@app.route('/wSBPlot', defaults={'degree':5, 'firstName':"", 'lastname':""})
+@app.route('/wSBPlot/<int:degree>', defaults={'firstName':"", 'lastname':""})
+@app.route('/wSBPlot/<int:degree>/<string:firstName>/<string:lastName>')
+def wSBPlot(degree, firstName, lastName):
+    masterFig, _ = wSB_master_plot(degToPlot=degree, firstName=firstName, lastName=lastName)
     img = BytesIO()
     masterFig.savefig(img)
     img.seek(0)
