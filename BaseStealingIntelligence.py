@@ -4,7 +4,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-
+from os import environ
 from sklearn.metrics import r2_score
 from flask import Flask, render_template, send_file
 from io import BytesIO
@@ -252,5 +252,8 @@ if __name__ == "__main__":
     dfMaster = build_dataframe()
     build_models()
     build_BSIRs()
-    app.run()
+    try:
+        app.run(port=environ["PORT"])
+    except KeyError:
+        app.run()
 
