@@ -1,21 +1,25 @@
+import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from pybaseball import lahman
 from sklearn.metrics import r2_score
 
-pd.options.display.max_columns = 2000
-pd.options.display.max_rows = 2000
 
 wSBmodels = {}
+wSBmodelPredictions = {}
+wSBmodelR2 = {}
 dfMaster = pd.DataFrame.empty
 
 runSB = 0.2
 runCS = -0.423
 degrees = [1,2,3,4,5,6]
+#cyan is reserved for the active player
+#red and green for positive and negative BSIR when ploting lines
+colors = ['b', 'm', 'k', 'b', 'm', 'y', 'k']
 
 
+#Setup Functions
 def build_dataframe():
     dfSpeed = pd.read_csv("data/MLBSprintSpeeds.csv")
     dfSpeedNames = pd.DataFrame(dfSpeed[["Player","Speed"]])
@@ -29,28 +33,160 @@ def build_dataframe():
     lgwSB = (np.sum(dfbatting['SB']) * runSB + np.sum(dfbatting['CS'])*runCS) / (np.sum(dfbatting['H'])+np.sum(dfbatting['BB'])+np.sum(dfbatting['HBP'])-np.sum(dfbatting['IBB']))
     dfbatting = dfbatting[['playerID', 'yearID', 'SB', 'CS', 'H', 'BB', 'HBP', 'IBB', 'PA']]
 
-    dfmaster = pd.read_csv("data/LahmanMaster.csv")
-    dfmaster = dfmaster[['playerID', 'nameFirst', 'nameLast']]
+    dfNames = pd.read_csv("data/LahmanMaster.csv")
+    dfNames = dfNames[['playerID', 'nameFirst', 'nameLast']]
 
-    dfPlayers = pd.merge(dfmaster, dfbatting, on='playerID')
-    dfPlayers['Speed'] = -1
+    dfMaster = pd.merge(dfNames, dfbatting, on='playerID')
+    dfMaster['Speed'] = -1
+
     for i, speedRow in dfSpeedNames.iterrows():
-        match = dfPlayers.loc[(dfPlayers['nameFirst'] == speedRow.nameFirst)]
+        match = dfMaster.loc[(dfMaster['nameFirst'] == speedRow.nameFirst)]
         if not match.empty:
             for j, row2 in match.iterrows():
                 if row2.nameLast == speedRow.nameLast:
-                    dfPlayers.loc[j,'Speed'] = speedRow['Speed']
+                    dfMaster.loc[j,'Speed'] = speedRow['Speed']
 
-    dfPlayers = dfPlayers.drop(dfPlayers[dfPlayers['Speed'] < 0].index)
-    dfPlayers['wSB'] = dfPlayers['SB'] * runSB + dfPlayers['CS']*runCS - ((dfPlayers['H']+dfPlayers['BB']+dfPlayers['HBP']-dfPlayers['IBB'])*lgwSB)
-    dfPlayers['wSBPA'] = dfPlayers['wSB']/dfPlayers['PA']
-    dfPlayers = dfPlayers.sort_values('Speed')
-    return dfPlayers
+    dfMaster = dfMaster.drop(dfMaster[dfMaster['Speed'] < 0].index)
+    dfMaster['wSB'] = dfMaster['SB'] * runSB + dfMaster['CS']*runCS - ((dfMaster['H']+dfMaster['BB']+dfMaster['HBP']-dfMaster['IBB'])*lgwSB)
+    dfMaster['wSBPA'] = dfMaster['wSB']/dfMaster['PA']
+    dfMaster = dfMaster.sort_values('Speed')
+    return dfMaster
 
 def build_models():
+    if dfMaster.empty:  build_dataframe()
     for deg in degrees:
         wSBmodels[deg] = np.polyfit(dfMaster['Speed'], dfMaster['wSB'], deg)
 
+def build_BSIRs():
+    if dfMaster.empty: build_dataframe()
+    if wSBmodels == {}: build_models()
+    
+    for deg in degrees:
+        dfMaster['BSIR_{0}'.format(deg)] = dfMaster['wSB']-dfMaster['Speed'].apply(lambda x: predict(x, wSBmodels[deg]))
+
+def get_predictions():
+    if dfMaster.empty: build_dataframe()
+    if wSBmodels == {}: build_models()
+    for deg in degrees:
+        predictions = []    
+        for speed in dfMaster['Speed']:
+            predictions.append(predict(speed, wSBmodels[deg]))
+        wSBmodelPredictions[deg] = predictions
+
+def get_R2s():
+    if dfMaster.empty: build_dataframe()
+    if wSBmodels == {}: build_models()
+    if wSBmodelPredictions == {}: get_predictions()
+    for deg in degrees:
+        wSBmodelR2[deg] = r2_score(dfMaster['wSB'], wSBmodelPredictions[deg])
+
+
+#Plotting Functions
+def wSB_master_plot(degToPlot=degrees, toShow=False, zeroLine=False, firstName="", lastName=""):
+    if dfMaster.empty: build_dataframe()
+    if wSBmodels == {}: build_models()
+    if wSBmodelPredictions == {}: get_predictions()
+    if wSBmodelR2 == {}: get_R2s()
+    if type(degToPlot) == int: degToPlot = [degToPlot]
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
+    if zeroLine: ax.plot(dfMaster['Speed'], np.zeros(len(dfMaster['Speed'])), color='k')
+    ax.scatter(dfMaster['Speed'], dfMaster['wSB'], label="Players", c='y', s=(plt.rcParams['lines.markersize'] ** 2)/(2*len(degToPlot)))
+    for deg in degToPlot:
+        ax.plot(dfMaster['Speed'], wSBmodelPredictions[deg], label="Degree: {0} R2: {1:0.4f}".format(deg, wSBmodelR2[deg]), color=colors[deg-1], alpha=1/2)
+
+    if firstName != "" and lastName != "":
+        player = find_player(firstName, lastName)
+        if not player.empty: 
+            for _, row in player.iterrows():
+                ax.scatter(row['Speed'], row['wSB'], label="{0} {1} BSIR".format(firstName, lastName), color='C', s=(plt.rcParams['lines.markersize'] ** 2)*2)
+                ax.text(23, 2, "{0} {1}\nwSB: {2:.4f}".format(firstName, lastName, row['wSB']), fontweight='bold', fontsize=20)
+                ax.arrow(23, 2, row['Speed']-23, row['wSB']-2)
+        else:
+            print("player not found")
+
+    ax.set_xlabel("Speed", fontsize=16)
+    ax.set_ylabel("wSB", fontsize=16)
+    ax.set_title("wSB for all Players by Speed", fontsize=20); ax.grid(alpha=0.25)
+    ax.legend(loc="upper left", fontsize=8)
+    if toShow: plt.show()
+    return fig, ax
+
+
+
+def BSIR_master_plot(degToPlot=[degrees[0]], movingAverage=1, toShow=False, zeroLine=False, firstName="", lastName=""):
+    if dfMaster.empty: build_dataframe()
+    if wSBmodels == {}: build_models()
+    if type(degToPlot) == int: degToPlot = [degToPlot]
+    if 'BSIR_{0}'.format(degToPlot[0]) not in dfMaster.columns: build_BSIRs()
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
+    if zeroLine: ax.plot(dfMaster['Speed'], np.zeros(len(dfMaster['Speed'])), color='k')
+    for deg in degToPlot:
+        ax.scatter(dfMaster['Speed'], dfMaster['BSIR_{0}'.format(deg)], label="Players BSIR_{0}".format(deg), color='y', s=(plt.rcParams['lines.markersize'] ** 2)/(2*len(degToPlot)), alpha=1/2)
+        if movingAverage > 1:
+            BSIR_MA = movingaverage(dfMaster['BSIR_{0}'.format(deg)],movingAverage)
+            ax.plot(dfMaster['Speed'], BSIR_MA, label="BSIR_{0} Trend".format(deg), color=colors[deg-1], lw=(plt.rcParams['lines.markersize'] ** 2)/(8*len(degToPlot)))
+    
+    if firstName != "" and lastName != "":
+        player = find_player(firstName, lastName)
+        if not player.empty: 
+            for _, row in player.iterrows():
+                ax.scatter(row['Speed'], row['BSIR_{0}'.format(deg)], label="{0} {1} BSIR".format(firstName, lastName), color='C', s=(plt.rcParams['lines.markersize'] ** 2)*2)
+                ax.text(23, 2, "{0} {1}\nBSIR_{3}: {2:.4f}".format(firstName, lastName, row['BSIR_{0}'.format(deg)], deg), fontweight='bold', fontsize=20)
+                ax.arrow(23, 2, row['Speed']-23, row['BSIR_{0}'.format(deg)]-2)
+        else:
+            print("player not found")
+
+    ax.set_xlabel("Speed", fontsize=16)
+    ax.set_ylabel("BSIR (Base Running Intelligence Runs)", fontsize=16)
+    ax.set_title("BSIR from {0}th degree averages".format(degToPlot), fontsize=20); ax.grid(alpha=0.25)
+    ax.legend(loc="upper left", fontsize=8)
+    if toShow: plt.show()
+    return fig, ax
+
+
+
+def BSIR_line_plot(degToPlot=[degrees[0]], toShow=False, zeroLine=False, firstName="", lastName=""):
+    if dfMaster.empty: build_dataframe()
+    if wSBmodels == {}: build_models()
+    if wSBmodelPredictions == {}: get_predictions()
+    if wSBmodelR2 == {}: get_R2s()
+    if type(degToPlot) == int: degToPlot = [degToPlot]
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
+    if zeroLine: ax.plot(dfMaster['Speed'], np.zeros(len(dfMaster['Speed'])), color='k')
+    ax.scatter(dfMaster['Speed'], dfMaster['wSB'], label="Players", c='k', s=(plt.rcParams['lines.markersize'] ** 2)/(2*len(degToPlot)), alpha=1/4)
+    for deg in degToPlot:
+        ax.plot(dfMaster['Speed'], wSBmodelPredictions[deg], label="Degree: {0} R2: {1:0.4f}".format(deg, wSBmodelR2[deg]))
+        for i,row in dfMaster.iterrows():
+            prediction = predict(row['Speed'], wSBmodels[deg])
+            lineColor='r'
+            if row['wSB'] - prediction > 0: lineColor='g'
+            ax.plot((row['Speed'],row['Speed']), (row['wSB'], prediction), color=lineColor)
+    
+    if firstName != "" and lastName != "":
+        player = find_player(firstName, lastName)
+        if not player.empty: 
+            for _, row in player.iterrows():
+                prediction = predict(row['Speed'], wSBmodels[deg])
+                ax.plot((row['Speed'],row['Speed']), (row['wSB'], prediction), label="{0} {1} BSIR".format(firstName, lastName), color='c', lw=4)
+                ax.scatter(row['Speed'], row['wSB'], label="{0} {1} BSIR".format(firstName, lastName), color='C', s=(plt.rcParams['lines.markersize'] ** 2)*2)
+                ax.text(24, 3, "{0} {1}\nBSIR_{3}: {2:.4f}".format(firstName, lastName, row['BSIR_{0}'.format(deg)], deg), fontweight='bold', fontsize=20)
+                ax.arrow(24, 3, row['Speed']-24, row['wSB']-3)
+        else:
+            print("player not found")
+    
+    ax.set_xlabel("Speed", fontsize=16)
+    ax.set_ylabel("wSB", fontsize=16)
+    ax.set_title("BSIR_{0} Visualized".format(degToPlot), fontsize=20); ax.grid(alpha=0.25)
+    ax.legend(loc="upper left", fontsize=8)
+    if toShow: plt.show()
+    return fig, ax
+
+
+
+#Helper Functions
 def predict(speed, params):
     wSB = 0
     indexes = list(range(len(params)-1,-1,-1))
@@ -58,30 +194,34 @@ def predict(speed, params):
         wSB += (speed**power)*params[index]
     return wSB
 
-def get_predictions(deg):
-    predictions = []
-    for speed in dfMaster['Speed']:
-        predictions.append(predict(speed, wSBmodels[deg]))
-    return predictions
+def find_player(firstName, lastName):
+    if dfMaster.empty: build_dataframe()
+    match = dfMaster.loc[dfMaster['nameFirst'] == firstName]
+    fullMatch = match.loc[match['nameLast'] == lastName]
+    return pd.DataFrame(fullMatch)
 
-def wSB_master_plot():
-        colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
-        ax.scatter(dfMaster['Speed'], dfMaster['wSB'], label="Players")
-        for deg in degrees:
-            preds = get_predictions(deg)
-            R2 = r2_score(dfMaster['wSB'], preds)
-            ax.plot(dfMaster['Speed'], preds, label="Degree: {0} R2: {1:0.4f}".format(deg, R2))
-        ax.set_xlabel("Speed", fontsize=16)
-        ax.set_ylabel("wSB", fontsize=16)
-        ax.set_title("Regressions over data", fontsize=20); ax.grid(alpha=0.25)
-        ax.legend(loc="upper left", fontsize=8);
-        return ax
+def movingaverage (values, window):
+    weights = np.repeat(1.0, window)/window
+    forwardsma = np.convolve(values, weights, 'valid')
+    #perform a moving average backwards, then reverse it back
+    backwardsma = np.convolve(values[::-1], weights, 'valid')[::-1]
+    
 
-
+    dualDirectionMA = np.zeros(len(values))
+    dualDirectionMA[len(dualDirectionMA)-window+1:] = forwardsma[len(forwardsma)-window+1:]
+    dualDirectionMA[:window-1] = backwardsma[:window-1]
+    dualDirectionMA[window-1:len(dualDirectionMA)-window+1] = [(a+b)/2 for a,b in zip(forwardsma[:len(forwardsma)-window+1], backwardsma[window-1:])]
+    return dualDirectionMA
 
  
 if __name__ == "__main__":
     dfMaster = build_dataframe()
     build_models()
-    wSB_master_plot()
+    build_BSIRs()
+    # BSIR_master_plot(toShow=True)
+    # wSB_master_plot(degToPlot=2, toShow=True)
+    d = 3
+    wSB_master_plot(toShow=True, firstName="Adrian", lastName="Beltre")
+    # BSIR_master_plot(degToPlot=d, toShow=True, zeroLine=True, firstName="Adrian", lastName="Beltre")
+    # BSIR_line_plot(degToPlot=d, toShow=True, firstName="Adrian", lastName="Beltre")
+
