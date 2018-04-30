@@ -27,7 +27,7 @@ colors = ['b', 'm', 'k', 'b', 'm', 'y', 'k']
 def index():
     return render_template('index.html')
 
-@app.route('/wSBPlot')
+@app.route('/wSBPlot', defaults={'degrees'=[5], 'firstName':"", 'lastname':""})
 def wSBPlot():
     masterFig, _ = wSB_master_plot()
     img = BytesIO()
