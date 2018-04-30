@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Base Stealing Intelligence</title>
+    </head>
+
+    <body>
+        <h1>Spring 2018 Sabermetrics Base Stealing Intelligence</h1>
+        <h3>Jake Mitchell</h3>
+        <p>Welcome to my website for calculating a player's base stealing intelligence!  This is an excersize in seeing how well we can quantify how smart a given player is with regards to stealing bases.  Luckily with the new statcast data we are able to get sprint speeds for most of the players in the MLB for 2017.  There is a definite correlation between a player's top speed and how well they perform on the bases.  While there is a correlation, there is a ton of noise in the data, that I believe is due to how well a player uses their athletic ability.  
+
+            This website will be a work in progress, as I am very new to web development.  I will start with putting static things up here, and will steadily move towards a fully interactive website.  All of the backend statistics and plotting is complete. All i need to do is learn how in the world html css and python all work together... hmmmm
+        </p>
+
+
+        <img src="{{ url_for('wSBPlot') }}" alt="Image Placeholder" width="75%">
+        <p>Here is the basis of what I will be working on.  This is a plot of 436 player's weighted Stolen Bases from the 2017 season, against their top speed.  I have fit a series of polynomials to the data to see if I can come up with a trend line that could predict with relative accuracy what a players wSB would be given their top speed.  While they do not fit the data insanely well, eyeballing it says they do a decent job of hitting the middle of the data which is exactly what we want.</p>
+        <p>I will be calling the statistic Base Stealing Intelligence Runs or BSIR.  This is because of a handy feature of wSB, it is centered on 0.0! This works wonderfully as it is also scaled to represent the number of runs a player has contributed through stealing bases.  I am not adjusting the data up or down, which means that even by removing an "average" from their stats based on their speed, my statistic is still mean centered on 0 and represents runs!  A player's BSIR on this site represents how many runs they contributed to their team in 2017 due to their knowledge or skill in base stealing.</p>
+        <img src="{{ url_for('BSIRLinePlot', deg = 5 ) }}" alt="Image Placeholder" width="75%">
+        <p>Here is a visualization of what I hope to achieve with this statistic.  I applied a 5th degree polynomial here because it provided a good fit compared to the others.  This is one downfall of the statistic, as different player's stats can vary depending on what polynomial you choose.  For now I will stick with a 5th, but will enable others soon.</p>
+
+        <p>The distance between a players actual wSB for the season and this league "average" should give a decent ideal of how well they work with what they have.  On this graphic, green means they are doing better than their speed says they should, red means they are doing worse..  For example Trea Turner has performed way better than his speed should allow him to:  </p>
+        <img src="{{ url_for('BSIRLinePlot', deg = 5, firstName = "Trea", lastName = "Turner" ) }}" alt="Image Placeholder" width="75%">
+        <p>He provided 3.7 runs to his team simply because he knows when to steal, and when not to.  According to baseball wisdom, about every 10 runs is worth a win.  That means that ignoring his physical abilities, Trea provided a third of a win through a mental skill alone.</p>
+        <p>On the flip side you have Alcides Escobar, who actually cost his team about 2.6 runs over the course of the season due to poor choices.</p>
+        <img src="{{ url_for('BSIRLinePlot', deg = 5, firstName = "Alcides", lastName = "Escobar" ) }}" alt="Image Placeholder" width="75%">
+    </body>
+</html>

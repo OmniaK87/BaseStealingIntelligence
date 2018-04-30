@@ -1,10 +1,12 @@
-import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import r2_score
+from flask import Flask, render_template, send_file
+from io import BytesIO
 
+app=Flask(__name__)
 
 wSBmodels = {}
 wSBmodelPredictions = {}
@@ -17,6 +19,32 @@ degrees = [1,2,3,4,5,6]
 #cyan is reserved for the active player
 #red and green for positive and negative BSIR when ploting lines
 colors = ['b', 'm', 'k', 'b', 'm', 'y', 'k']
+
+
+#Web App functions
+@app.route('/')
+@app.route('/index')
+def index():
+    return render_template('index.html')
+
+@app.route('/wSBPlot')
+def wSBPlot():
+    masterFig, _ = wSB_master_plot()
+    img = BytesIO()
+    masterFig.savefig(img)
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
+
+
+@app.route('/BSIRLinePlot', defaults={'deg': 5, 'firstName':"", 'lastname':""})
+@app.route('/BSIRLinePlot/<int:deg>', defaults={'firstName':"", 'lastname':""})
+@app.route('/BSIRLinePlot/<int:deg>/<string:firstName>/<string:lastName>')
+def BSIRLinePlot(deg, firstName, lastName):
+    masterFig, _ = BSIR_line_plot(degToPlot=deg, firstName=firstName, lastName=lastName)
+    img = BytesIO()
+    masterFig.savefig(img)
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
 
 
 #Setup Functions
@@ -50,6 +78,7 @@ def build_dataframe():
     dfMaster['wSB'] = dfMaster['SB'] * runSB + dfMaster['CS']*runCS - ((dfMaster['H']+dfMaster['BB']+dfMaster['HBP']-dfMaster['IBB'])*lgwSB)
     dfMaster['wSBPA'] = dfMaster['wSB']/dfMaster['PA']
     dfMaster = dfMaster.sort_values('Speed')
+    dfMaster.reset_index(drop=True, inplace=True)
     return dfMaster
 
 def build_models():
@@ -91,7 +120,7 @@ def wSB_master_plot(degToPlot=degrees, toShow=False, zeroLine=False, firstName="
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
     if zeroLine: ax.plot(dfMaster['Speed'], np.zeros(len(dfMaster['Speed'])), color='k')
-    ax.scatter(dfMaster['Speed'], dfMaster['wSB'], label="Players", c='y', s=(plt.rcParams['lines.markersize'] ** 2)/(2*len(degToPlot)))
+    ax.scatter(dfMaster['Speed'], dfMaster['wSB'], label="Players", c='y', s=(plt.rcParams['lines.markersize'] ** 2)/(len(degToPlot)))
     for deg in degToPlot:
         ax.plot(dfMaster['Speed'], wSBmodelPredictions[deg], label="Degree: {0} R2: {1:0.4f}".format(deg, wSBmodelR2[deg]), color=colors[deg-1], alpha=1/2)
 
@@ -218,10 +247,5 @@ if __name__ == "__main__":
     dfMaster = build_dataframe()
     build_models()
     build_BSIRs()
-    # BSIR_master_plot(toShow=True)
-    # wSB_master_plot(degToPlot=2, toShow=True)
-    d = 3
-    wSB_master_plot(toShow=True, firstName="Adrian", lastName="Beltre")
-    # BSIR_master_plot(degToPlot=d, toShow=True, zeroLine=True, firstName="Adrian", lastName="Beltre")
-    # BSIR_line_plot(degToPlot=d, toShow=True, firstName="Adrian", lastName="Beltre")
+    app.run()
 
