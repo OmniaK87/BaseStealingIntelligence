@@ -298,7 +298,7 @@ def BSIR_line_plot(degToPlot=defaultDegree, toShow=False, zeroLine=False, fullNa
                 prediction = predict(row['Speed'], wSBmodels[degToPlot])
                 ax.plot((row['Speed'],row['Speed']), (row['wSB'], prediction), label="{0} BSIR".format(fullName), color='c', lw=4)
                 ax.scatter(row['Speed'], row['wSB'], label="{0} BSIR".format(fullName), color='C', s=(plt.rcParams['lines.markersize'] ** 2)*2)
-                ax.text(24, 3, "{0}\nBSIR_{2}: {1:.3f}\nwSB:{3:.3f}".format(fullName, row['BSIR_{0}'.format(degToPlot)], degToPlot, row['wSB']), fontweight='bold', fontsize=20)
+                ax.text(24, 3, "{0}\nBSIR_{2}: {1:.3f}\nwSB: {3:.3f}".format(fullName, row['BSIR_{0}'.format(degToPlot)], degToPlot, row['wSB']), fontweight='bold', fontsize=20)
                 ax.arrow(24, 3, row['Speed']-24, row['wSB']-3)
         else:
             print("player not found")
