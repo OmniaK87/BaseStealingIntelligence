@@ -42,7 +42,8 @@ def aboutBSIR():
     return render_template(
         'aboutBSIR.html', 
         degrees=degrees,
-        selectedDeg=selectedDeg)
+        selectedDeg=selectedDeg,
+        wSBBSIRCorr=dfMaster['wSB'].corr(dfMaster['BSIR_{0}'.format(selectedDeg)]))
 
 @app.route('/BSIRByPlayer')
 def BSIRByPlayer():
@@ -105,6 +106,15 @@ def BSIRLinePlot():
 def BSIRPlot():
     masterFig, _ = BSIR_plot(
             degToPlot=request.args.get('deg', default=5, type=int), fullName=request.args.get('fullName', default="", type=str),zeroLine=request.args.get('zeroLine', default=True, type=bool))
+    img = BytesIO()
+    masterFig.savefig(img)
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
+
+@app.route('/BSIRwSBPlot', methods=['GET', 'POST'])
+def BSIRwSBPlot():
+    masterFig, _ = BSIR_wSB_plot(
+            degToPlot=request.args.get('deg', default=5, type=int), fullName=request.args.get('fullName', default="", type=str),zeroLine=request.args.get('zeroLine', default=False, type=bool))
     img = BytesIO()
     masterFig.savefig(img)
     img.seek(0)
@@ -266,6 +276,36 @@ def BSIR_plot(degToPlot=defaultDegree, movingAverage=1, toShow=False, zeroLine=F
             print("player not found")
 
     ax.set_xlabel("Speed", fontsize=16)
+    ax.set_ylabel("BSIR (Base Running Intelligence Runs)", fontsize=16)
+    ax.set_title("BSIR from {0}th degree averages".format(degToPlot), fontsize=20); ax.grid(alpha=0.25)
+    ax.legend(loc="upper left", fontsize=8)
+    if toShow: plt.show()
+    return fig, ax
+
+def BSIR_wSB_plot(degToPlot=defaultDegree,toShow=False, zeroLine=False, fullName=""):
+    if dfMaster.empty: build_dataframe()
+    if wSBmodels == {}: build_models()
+    if 'BSIR_{0}'.format(degToPlot) not in dfMaster.columns: build_BSIRs()
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
+    if zeroLine: ax.plot(dfMaster['wSB'], np.zeros(len(dfMaster['wSB'])), color='k')
+
+    ax.scatter(dfMaster['wSB'], dfMaster['BSIR_{0}'.format(degToPlot)], label="Players BSIR_{0}".format(degToPlot), color='g', s=(plt.rcParams['lines.markersize'] ** 2)/2, alpha=1/2)
+
+    ax.text(2, -1, "Corr: {0:0.4f}".format(dfMaster['wSB'].corr(dfMaster['BSIR_{0}'.format(degToPlot)])), fontweight='bold', fontsize=20)
+    
+    
+    if fullName:
+        player = find_player(fullName)
+        if not player.empty: 
+            for _, row in player.iterrows():
+                ax.scatter(row['wSB'], row['BSIR_{0}'.format(degToPlot)], label="{0} BSIR".format(fullName), color='c', s=(plt.rcParams['lines.markersize'] ** 2)*2)
+                ax.text(2, -2.5, "{0}\nBSIR_{2}: {1:.3f}\nwSB: {3:.3f}".format(fullName, row['BSIR_{0}'.format(degToPlot)], degToPlot, row['wSB']), fontweight='bold', fontsize=20)
+                ax.arrow(2, -2.5, row['wSB']-2, row['BSIR_{0}'.format(degToPlot)]+2.5)
+        else:
+            print("player not found")
+
+    ax.set_xlabel("wSB", fontsize=16)
     ax.set_ylabel("BSIR (Base Running Intelligence Runs)", fontsize=16)
     ax.set_title("BSIR from {0}th degree averages".format(degToPlot), fontsize=20); ax.grid(alpha=0.25)
     ax.legend(loc="upper left", fontsize=8)

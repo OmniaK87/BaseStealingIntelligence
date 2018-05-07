@@ -36,9 +36,17 @@
         
 
         <p>Here is the basis of what I will be working on.  Luckily with the new statcast data we are able to get sprint speeds for most of the players in the MLB for 2017.  From the lahman database I can get all of the statistics needed to calculate a player's wSB for the same time period.</p>
+        <p>wSB is calculated as follows:</p>
+        <p>wSB = (SB * runSB) + (CS * runCS) – (lgwSB * (1B + BB + HBP – IBB))</p>
+        <p>Where lgwSB = (SB * runSB + CS * runCS) / (1B + BB + HBP – IBB)</p>
+        <p>Where runSB = 0.2  and  runCS = -0.423</p>
         <img src="{{ url_for('wSBPlot') }}" alt="Image Placeholder" width="50%">
 
         <p>This is a plot of 436 player's weighted Stolen Bases from the 2017 season, against their top speed.  I have fit a series of polynomials to the data to see if I can come up with a trend line that could predict with relative accuracy what an average players wSB would be given their top speed.  They have decent correlation which is what my goal is.  The noise in the data is the BSIR that I am looking for. </p>
+
+        <p>BSIR is calculated as follows:</p>
+        <p>BSIR = wSB - lgwSBbySpeed(speed)</p>
+        <p>Where lgwSBbySpeed(speed) is a function that predicts wSB based on speed and league averages.</p>
 
         <form action="{{ url_for('aboutBSIR') }}" >
             <select name=selectedDeg>
@@ -58,5 +66,8 @@
         <p>Here is a visualization of the distribution of the BSIRs for all of the players given the degreee selected. </p>
 
         <p>An interesting feature we can see here is that as player's speed increases, the variance in their base stealing intelligence also goes up.</p>
+
+        <img src="{{ url_for('BSIRwSBPlot', deg=selectedDeg) }}" alt="Image Placeholder" width="50%">
+        <p>When we plot BSIR vs wSB we find that they have a very high correlation score of {{ wSBBSIRCorr }}</p>
     </body>
 </html>
