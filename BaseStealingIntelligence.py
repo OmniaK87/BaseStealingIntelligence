@@ -19,7 +19,7 @@ dfMaster = pd.DataFrame.empty
 runSB = 0.2
 runCS = -0.423
 degrees = [1,2,3,4,5,6]
-selectedDeg = 5
+defaultDegree = 5
 #cyan is reserved for the active player
 #red and green for positive and negative BSIR when ploting lines
 colors = ['b', 'm', 'k', 'b', 'm', 'y', 'k']
@@ -29,7 +29,55 @@ colors = ['b', 'm', 'k', 'b', 'm', 'y', 'k']
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template('index.html')
+    selectedDeg = request.args.get('selectedDeg', default=defaultDegree)
+    return render_template(
+        'index.html', 
+        degrees=degrees,
+        selectedDeg=selectedDeg)
+
+@app.route('/aboutBSIR')
+def aboutBSIR():
+    selectedDeg = request.args.get('selectedDeg', default=defaultDegree)
+    return render_template(
+        'aboutBSIR.html', 
+        degrees=degrees,
+        selectedDeg=selectedDeg)
+
+@app.route('/BSIRByPlayer')
+def BSIRByPlayer():
+    selectedDeg = request.args.get('selectedDeg', default=defaultDegree)
+    return render_template(
+        'BSIRByPlayer.html', 
+        degrees=degrees,
+        playerList=dfMaster['Full Name'],
+        selectedDeg=selectedDeg)
+
+@app.route('/data', methods=['GET'])
+def data():
+    if dfMaster.empty: build_dataframe()
+    if wSBmodels == {}: build_models()
+    ascendingOrder = request.args.get('ascendingOrder', default=1, type=int)
+    sortBy = request.args.get('sortBy', default='Full Name')
+    columns = request.args.getlist('columns')
+    
+    dfpage = dfMaster.sort_values(sortBy, ascending=ascendingOrder)
+    dfpage.reset_index(drop=True, inplace=True)
+    if "all" in columns or columns == []:
+        pass
+    else:
+        dfpage = dfpage[columns]
+
+    datahtml = (
+        dfpage.style
+        .set_properties(**{'font-size': '9pt', 'font-family': 'Calibri'})
+        .render()
+    )
+
+    return render_template('data.html', datahtml=datahtml,
+    degrees=degrees,
+    playerList=dfMaster['Full Name'],
+    columnList=dfMaster.columns,
+    sortBy=sortBy)
 
 @app.route('/wSBPlot', methods=['GET', 'POST'])
 def wSBPlot():
@@ -44,7 +92,7 @@ def wSBPlot():
 @app.route('/BSIRLinePlot', methods=['GET', 'POST'])
 def BSIRLinePlot():
     lineFig, _ = BSIR_line_plot(
-            degToPlot=request.args.get('deg', default=5, type=int), firstName=request.args.get('firstName', default="", type=str), lastName=request.args.get('lastName', default="", type=str))
+            degToPlot=request.args.get('deg', default=5, type=int), fullName=request.args.get('fullName', default="", type=str))
     img = BytesIO()
     lineFig.savefig(img)
     img.seek(0)
@@ -53,33 +101,13 @@ def BSIRLinePlot():
 @app.route('/BSIRPlot', methods=['GET', 'POST'])
 def BSIRPlot():
     masterFig, _ = BSIR_plot(
-            degToPlot=request.args.get('deg', default=5, type=int), firstName=request.args.get('firstName', default="", type=str), lastName=request.args.get('lastName', default="", type=str),zeroLine=request.args.get('zeroLine', default=True, type=bool))
+            degToPlot=request.args.get('deg', default=5, type=int), fullName=request.args.get('fullName', default="", type=str),zeroLine=request.args.get('zeroLine', default=True, type=bool))
     img = BytesIO()
     masterFig.savefig(img)
     img.seek(0)
     return send_file(img, mimetype='image/png')
 
-@app.route('/data', methods=['GET'])
-def data():
-    if dfMaster.empty: build_dataframe()
-    if wSBmodels == {}: build_models()
-    sortBy = request.args.get('sortBy', default='BSIR_{0}'.format(selectedDeg))
-    displayAll = request.args.get('displayAll', default=False, type=bool)
-    
-    dfpage = dfMaster.sort_values(sortBy)
-    dfpage.reset_index(drop=True, inplace=True)
-    if displayAll:
-        pass
-    else:
-        dfpage = dfpage[['Full Name', 'Speed', 'wSB', 'BSIR_{0}'.format(selectedDeg)]]
 
-    datahtml = (
-        dfpage.style
-        .set_properties(**{'font-size': '9pt', 'font-family': 'Calibri'})
-        .render()
-    )
-
-    return render_template('data.html', datahtml=datahtml)
 
 
 
@@ -137,7 +165,7 @@ def build_dataframe():
     dfMaster = dfMaster.drop(dfMaster[dfMaster['Speed'] < 0].index)
     dfMaster['wSB'] = dfMaster['SB'] * runSB + dfMaster['CS']*runCS - ((dfMaster['H']+dfMaster['BB']+dfMaster['HBP']-dfMaster['IBB'])*lgwSB)
 
-    dfMaster['Full Name'] = dfMaster['nameFirst']+' '+dfMaster['nameLast']
+    dfMaster.insert(0, 'Full Name', dfMaster['nameFirst']+' '+dfMaster['nameLast'])
     
     dfMaster = dfMaster.sort_values('Speed')
     dfMaster.reset_index(drop=True, inplace=True)
@@ -178,14 +206,13 @@ def get_R2s():
 
 
 #Plotting Functions
-def wSB_master_plot(degToPlot=-1, toShow=False, zeroLine=False, firstName="", lastName=""):
+def wSB_master_plot(degToPlot=-1, toShow=False, zeroLine=False, fullName=""):
     if dfMaster.empty: build_dataframe()
     if wSBmodels == {}: build_models()
     if wSBmodelPredictions == {}: get_predictions()
     if wSBmodelR2 == {}: get_R2s()
     if degToPlot == -1: degToPlot = degrees
     elif type(degToPlot) == int: degToPlot = [degToPlot]
-    print("degToPlot:", degToPlot)
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,6))
     if zeroLine: ax.plot(dfMaster['Speed'], np.zeros(len(dfMaster['Speed'])), color='k')
@@ -193,12 +220,12 @@ def wSB_master_plot(degToPlot=-1, toShow=False, zeroLine=False, firstName="", la
     for deg in degToPlot:
         ax.plot(dfMaster['Speed'], wSBmodelPredictions[deg], label="Degree: {0} R2: {1:0.4f}".format(deg, wSBmodelR2[deg]), color=colors[deg-1], alpha=1/2)
 
-    if firstName != "" and lastName != "":
-        player = find_player(firstName, lastName)
+    if fullName != "":
+        player = find_player(fullName)
         if not player.empty: 
             for _, row in player.iterrows():
-                ax.scatter(row['Speed'], row['wSB'], label="{0} {1} BSIR".format(firstName, lastName), color='C', s=(plt.rcParams['lines.markersize'] ** 2)*2)
-                ax.text(23, 2, "{0} {1}\nwSB: {2:.4f}".format(firstName, lastName, row['wSB']), fontweight='bold', fontsize=20)
+                ax.scatter(row['Speed'], row['wSB'], label="{0} BSIR".format(fullName), color='C', s=(plt.rcParams['lines.markersize'] ** 2)*2)
+                ax.text(23, 2, "{0}\nwSB: {1:.4f}".format(fullName, row['wSB']), fontweight='bold', fontsize=20)
                 ax.arrow(23, 2, row['Speed']-23, row['wSB']-2)
         else:
             print("player not found")
@@ -212,7 +239,7 @@ def wSB_master_plot(degToPlot=-1, toShow=False, zeroLine=False, firstName="", la
 
 
 
-def BSIR_plot(degToPlot=selectedDeg, movingAverage=1, toShow=False, zeroLine=False, firstName="", lastName=""):
+def BSIR_plot(degToPlot=defaultDegree, movingAverage=1, toShow=False, zeroLine=False, fullName=""):
     if dfMaster.empty: build_dataframe()
     if wSBmodels == {}: build_models()
     if 'BSIR_{0}'.format(degToPlot) not in dfMaster.columns: build_BSIRs()
@@ -225,12 +252,12 @@ def BSIR_plot(degToPlot=selectedDeg, movingAverage=1, toShow=False, zeroLine=Fal
         BSIR_MA = movingaverage(dfMaster['BSIR_{0}'.format(degToPlot)],movingAverage)
         ax.plot(dfMaster['Speed'], BSIR_MA, label="BSIR_{0} Trend".format(degToPlot), color=colors[degToPlot-1], lw=(plt.rcParams['lines.markersize'] ** 2)/8)
     
-    if firstName != "" and lastName != "":
-        player = find_player(firstName, lastName)
+    if fullName:
+        player = find_player(fullName)
         if not player.empty: 
             for _, row in player.iterrows():
-                ax.scatter(row['Speed'], row['BSIR_{0}'.format(degToPlot)], label="{0} {1} BSIR".format(firstName, lastName), color='c', s=(plt.rcParams['lines.markersize'] ** 2)*2)
-                ax.text(23, 2, "{0} {1}\nBSIR_{3}: {2:.4f}".format(firstName, lastName, row['BSIR_{0}'.format(degToPlot)], degToPlot), fontweight='bold', fontsize=20)
+                ax.scatter(row['Speed'], row['BSIR_{0}'.format(degToPlot)], label="{0} BSIR".format(fullName), color='c', s=(plt.rcParams['lines.markersize'] ** 2)*2)
+                ax.text(23, 2, "{0}\nBSIR_{2}: {1:.3f}\nwSB: {3:.3f}".format(fullName, row['BSIR_{0}'.format(degToPlot)], degToPlot, row['wSB']), fontweight='bold', fontsize=20)
                 ax.arrow(23, 2, row['Speed']-23, row['BSIR_{0}'.format(degToPlot)]-2)
         else:
             print("player not found")
@@ -244,7 +271,7 @@ def BSIR_plot(degToPlot=selectedDeg, movingAverage=1, toShow=False, zeroLine=Fal
 
 
 
-def BSIR_line_plot(degToPlot=selectedDeg, toShow=False, zeroLine=False, firstName="", lastName=""):
+def BSIR_line_plot(degToPlot=defaultDegree, toShow=False, zeroLine=False, fullName=""):
     if dfMaster.empty: build_dataframe()
     if wSBmodels == {}: build_models()
     if wSBmodelPredictions == {}: get_predictions()
@@ -261,14 +288,14 @@ def BSIR_line_plot(degToPlot=selectedDeg, toShow=False, zeroLine=False, firstNam
         if row['wSB'] - prediction > 0: lineColor='g'
         ax.plot((row['Speed'],row['Speed']), (row['wSB'], prediction), color=lineColor)
     
-    if firstName != "" and lastName != "":
-        player = find_player(firstName, lastName)
+    if fullName:
+        player = find_player(fullName)
         if not player.empty: 
             for _, row in player.iterrows():
                 prediction = predict(row['Speed'], wSBmodels[degToPlot])
-                ax.plot((row['Speed'],row['Speed']), (row['wSB'], prediction), label="{0} {1} BSIR".format(firstName, lastName), color='c', lw=4)
-                ax.scatter(row['Speed'], row['wSB'], label="{0} {1} BSIR".format(firstName, lastName), color='C', s=(plt.rcParams['lines.markersize'] ** 2)*2)
-                ax.text(24, 3, "{0} {1}\nBSIR_{3}: {2:.4f}".format(firstName, lastName, row['BSIR_{0}'.format(degToPlot)], degToPlot), fontweight='bold', fontsize=20)
+                ax.plot((row['Speed'],row['Speed']), (row['wSB'], prediction), label="{0} BSIR".format(fullName), color='c', lw=4)
+                ax.scatter(row['Speed'], row['wSB'], label="{0} BSIR".format(fullName), color='C', s=(plt.rcParams['lines.markersize'] ** 2)*2)
+                ax.text(24, 3, "{0}\nBSIR_{2}: {1:.3f}\nwSB:{3:.3f}".format(fullName, row['BSIR_{0}'.format(degToPlot)], degToPlot, row['wSB']), fontweight='bold', fontsize=20)
                 ax.arrow(24, 3, row['Speed']-24, row['wSB']-3)
         else:
             print("player not found")
@@ -290,10 +317,9 @@ def predict(speed, params):
         wSB += (speed**power)*params[index]
     return wSB
 
-def find_player(firstName, lastName):
+def find_player(fullName):
     if dfMaster.empty: build_dataframe()
-    match = dfMaster.loc[dfMaster['nameFirst'] == firstName]
-    fullMatch = match.loc[match['nameLast'] == lastName]
+    fullMatch = dfMaster.loc[dfMaster['Full Name'] == fullName]
     return pd.DataFrame(fullMatch)
 
 def movingaverage (values, window):

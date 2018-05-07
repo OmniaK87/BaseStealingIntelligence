@@ -6,10 +6,41 @@
 
     <body>
         <form action="{{ url_for('index') }}" method="GET">
-                <p><input type = "submit" value = "Go To Home" /></p>
+                <p><input type = "submit" value = "Home" /></p>
         </form>
-        
-        <p>Here is the data that is used to build the graphs</p>
+        <form action="{{ url_for('aboutBSIR') }}" method="GET">
+            <p><input type = "submit" value = "About BSIR" /></p>
+        </form>
+        <form action="{{ url_for('BSIRByPlayer') }}" method="GET">
+            <p><input type = "submit" value = "BSIR By Player" /></p>
+        </form>
+
+        <form action="{{ url_for('data') }}" >
+            <label>Columns to Show (ctrl-click to select multiple)
+                <select name=columns multiple>
+                    <option value = "all" selected>All</option>
+                    {% for column in columnList %}
+                        <option value= "{{column}}">{{column}}</option>"
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Sort By
+                <select name=sortBy>
+                    {% for column in columnList %}
+                        <option value= "{{column}}">{{column}}</option>"
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Ascending order
+                <select name=ascendingOrder>
+                    <option value = "0" >False</option>
+                    <option value = "1" selected>True</option>
+                </select>
+            </label>
+            <button type="submit">Submit Settings</button>
+        </form>
+
+        <p>Here is the data sorted by {{ sortBy }}</p>
         <p>{{datahtml|safe}}</p>
     </body>
 </html>

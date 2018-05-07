@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>BSIR By Player</title>
+    </head>
+
+    <body>
+        <h1>BSIR By Player </h1>
+        <form action="{{ url_for('index') }}" method="GET">
+            <p><input type = "submit" value = "Home" /></p>
+        </form>
+        <form action="{{ url_for('aboutBSIR') }}" method="GET">
+            <p><input type = "submit" value = "About BSIR" /></p>
+        </form>
+        <form action="{{ url_for('data') }}" method="GET">
+            <p><input type = "submit" value = "Data" /></p>
+        </form>
+        
+        <p>Before playing around with the graphs, I would like to give you an example of the extremes of BSIR.  When using a 5th degree Polynomial, the player with the highest BSIR is Trea Turner.  </p>
+
+        <img src="{{ url_for('BSIRLinePlot', deg = 5, fullName="Trea Turner" ) }}" alt="Image Placeholder" width="50%">
+
+        <p>He provided 3.7 runs to his team simply because he knows when to steal, and when not to.  According to baseball wisdom, about every 10 runs is worth a win.  That means that ignoring his physical abilities, Trea provided a third of a win through a mental skill alone.</p>
+
+
+        <p>On the flip side you have Alcides Escobar, who actually cost his team about 2.6 runs over the course of the season due to poor choices.</p>
+        <img src="{{ url_for('BSIRLinePlot', deg = 5, fullName = "Alcides Escobar" ) }}" alt="Image Placeholder" width="50%">
+
+
+        <form action="{{ url_for('BSIRByPlayer') }}" >
+            <label>Polynomial Degree
+                <select name=selectedDeg>
+                    <option value ="{{selectedDeg}}" selected>{{selectedDeg}}</option>
+                    {% for degree in degrees %}
+                        <option value= "{{degree}}">{{degree}}</option>"
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Player Selector
+                <select name=playerList method="GET" action="/">
+                    <option value ="{{selectedPlayer}}" selected>{{selectedPlayer}}</option>
+                    {% for selectedPlayer in playerList %}
+                        <option value= "{{selectedPlayer}}" selected>{{selectedPlayer}}</option>"
+                    {% endfor %}
+                </select>
+            </label>
+
+            <button type="submit">Submit Settings</button>
+        </form>
+
+        
+
+    </body>
+</html>

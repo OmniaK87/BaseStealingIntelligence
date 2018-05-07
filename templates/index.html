@@ -7,51 +7,17 @@
     <body>
         <h1>Base Stealing Intelligence, Spring 2018 Sabermetrics </h1>
         <h3>Jake Mitchell</h3>
-        <p>Welcome to my website for calculating a player's base stealing intelligence!  This is an exercise in seeing how well we can quantify how smart a given player is with regards to stealing bases.  Luckily with the new statcast data we are able to get sprint speeds for most of the players in the MLB for 2017.  There is a definite correlation between a player's top speed and how well they perform on the bases.  While there is a correlation, there is a ton of noise in the data, that I believe is due to how well a player uses their athletic ability.  
-
-        This website will be a work in progress, as I am very new to web development.  I will start with putting static things up here, and will steadily move towards a fully interactive website.  All of the backend statistics and plotting is complete. All i need to do is learn how in the world html css and python all work together... hmmmm
-            </p>
-
-        <form action="{{ url_for('data') }}" method="GET">
-            <p><input type = "submit" value = "Go To Data" /></p>
+        <p>Welcome to my website for calculating a player's base stealing intelligence!  This is an exercise in seeing how well we can quantify how may runs a player produces by their base stealing intelligence alone.  I plan to do this by estimating how much of a player's weighted Stolen Bases (wSB) comes from their athletic ability first.  The difference between their actual wSB and this estimation will have to come from their smarts!  Explore around the website to learn more, I would start with the About BSIR page!</p>
+            
+        
+        <form action="{{ url_for('aboutBSIR') }}" method="GET">
+            <p><input type = "submit" value = "About BSIR" /></p>
         </form>
-
-        
-        
-        
-
-
-        <img src="{{ url_for('wSBPlot') }}" alt="Image Placeholder" width="50%">
-        <p>Here is the basis of what I will be working on.  This is a plot of 436 player's weighted Stolen Bases from the 2017 season, against their top speed.  I have fit a series of polynomials to the data to see if I can come up with a trend line that could predict with relative accuracy what an average players wSB would be given their top speed.  While they do not fit the data insanely well, eyeballing it says they do a decent job of hitting the middle of the data which is exactly what we want.  As far as mapping everything well I have found that a 5th degree polynomial works the best.</p>
-
-        <p>I plan on estimating a players Base Stealing Intelligence Runs (BSIR) by taking a player's wSB difference from this league trend line.  The trend line gives us what kind of a runs a player is expected to produce given their physical ability represented by their maximum speed.  A players difference from this line should give us the number of runs they produced by stealing bases well, rather than just by being fast.</p>
-
-        <img src="{{ url_for('BSIRLinePlot', deg = 5 ) }}" alt="Image Placeholder" width="50%">
-        <p>Here is a visualization of what I am talking about.  The points on the graph are individual players, and the lines are their BSIRs.  On this graphic, green means they are doing better than their speed says they should, red means they are doing worse.</p>
-
-        <img src="{{ url_for('BSIRPlot', deg = 5 ) }}" alt="Image Placeholder" width="50%">
-        <p>Here is a visualization of the distribution of the BSIRs for all of the players given the degreee selected. </p>
-        
-        <p>Benefits of BSIR</p>
-        <ul style="list-style-type:circle">
-            <li>Quantifies something new and unique</li>
-            <li>Centered around 0</li>
-            <li>In units of runs</li>
-            <li>Is relative to league average</li>
-        </ul>
-        <p>Downsides of BSIR</p>
-        <ul style="list-style-type:circle">
-            <li>Dependant on what polynomial chosen</li>
-            <li>Assumes that the difference from the predicted value based on speed is all due to their base running intelligence</li>
-        </ul>
-        
-        
-        <p>An interesting feature we can see here is that as player's speed increases, the variancein their base stealing intelligence also goes up.  This is likely due to the fact that I am holding them to a higher standard, meaning those who are performing near the acutal league average that doesn't account for their speed, will be marked very low in BSIR.  Those who are marked as having very high BSIR are likely those who train to be great at base stealing, most of whom have the speed to begin with.</p>
-
-
-        
-
-        
-        
+        <form action="{{ url_for('data') }}" method="GET">
+            <p><input type = "submit" value = "Data" /></p>
+        </form>  
+        <form action="{{ url_for('BSIRByPlayer') }}" method="GET">
+            <p><input type = "submit" value = "BSIR By Player" /></p>
+        </form>
     </body>
 </html>

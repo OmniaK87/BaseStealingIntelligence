@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>About BSIR</title>
+    </head>
+
+    <body>
+        <h1>About BSIR</h1>
+        <form action="{{ url_for('index') }}" method="GET">
+                    <p><input type = "submit" value = "Home" /></p>
+        </form>
+        <form action="{{ url_for('BSIRByPlayer') }}" method="GET">
+            <p><input type = "submit" value = "BSIR By Player" /></p>
+        </form>
+        <form action="{{ url_for('data') }}" method="GET">
+            <p><input type = "submit" value = "Data" /></p>
+        </form>
+
+        <p>Base Stealing Intelligence Runs BSIR is a statistic that aims to quantify the number of runs a player produces based on their base running intelligence alone.  It is closely tied to and based on weighted Stolen Bases wSB.  It is found by fitting a wSB(speed) function on the leagues wSB and speed data.  A players BSIR is the difference between their actual wSB and their predicted wSB based on their speed</p>
+
+        <p>Benefits of BSIR</p>
+        <ul style="list-style-type:circle">
+            <li>Quantifies something new and unique</li>
+            <li>Centered around 0</li>
+            <li>In units of runs</li>
+            <li>Is relative to league average</li>
+        </ul>
+        <p>Downsides of BSIR</p>
+        <ul style="list-style-type:circle">
+            <li>Dependant on what polynomial chosen</li>
+            <li>Assumes that the difference from the predicted value based on speed is all due to their base running intelligence</li>
+        </ul>
+        
+
+        <p>Here is the basis of what I will be working on.  Luckily with the new statcast data we are able to get sprint speeds for most of the players in the MLB for 2017.  From the lahman database I can get all of the statistics needed to calculate a player's wSB for the same time period.</p>
+        <img src="{{ url_for('wSBPlot') }}" alt="Image Placeholder" width="50%">
+
+        <p>This is a plot of 436 player's weighted Stolen Bases from the 2017 season, against their top speed.  I have fit a series of polynomials to the data to see if I can come up with a trend line that could predict with relative accuracy what an average players wSB would be given their top speed.  They have decent correlation which is what my goal is.  The noise in the data is the BSIR that I am looking for. </p>
+
+        <form action="{{ url_for('aboutBSIR') }}" >
+                <select name=selectedDeg>
+                    <option value ="{{selectedDeg}}" selected>{{selectedDeg}}</option>
+                    {% for degree in degrees %}
+                        <option value= "{{degree}}">{{degree}}</option>"
+                    {% endfor %}
+                    
+                </select>
+                <button type="submit">Polynomial Degree</button>
+            </form>
+        
+        <img src="{{ url_for('BSIRLinePlot', deg=selectedDeg) }}" alt="Image Placeholder" width="50%">
+        <p>Here is a visualization of what I am talking about.  The points on the graph are individual players, and the lines are their BSIRs.  On this graphic, green means they are doing better than their speed says they should, red means they are doing worse.</p>
+
+        <img src="{{ url_for('BSIRPlot', deg=selectedDeg) }}" alt="Image Placeholder" width="50%">
+        <p>Here is a visualization of the distribution of the BSIRs for all of the players given the degreee selected. </p>
+
+        <p>An interesting feature we can see here is that as player's speed increases, the variance in their base stealing intelligence also goes up.</p>
+    </body>
+</html>
