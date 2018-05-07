@@ -20,6 +20,7 @@ runSB = 0.2
 runCS = -0.423
 degrees = [1,2,3,4,5,6]
 defaultDegree = 5
+defaultPlayer = "Billy Hamilton"
 #cyan is reserved for the active player
 #red and green for positive and negative BSIR when ploting lines
 colors = ['b', 'm', 'k', 'b', 'm', 'y', 'k']
@@ -46,11 +47,13 @@ def aboutBSIR():
 @app.route('/BSIRByPlayer')
 def BSIRByPlayer():
     selectedDeg = request.args.get('selectedDeg', default=defaultDegree)
+    selectedPlayer = request.args.get('selectedPlayer', default=defaultPlayer)
     return render_template(
         'BSIRByPlayer.html', 
         degrees=degrees,
         playerList=dfMaster['Full Name'],
-        selectedDeg=selectedDeg)
+        selectedDeg=selectedDeg,
+        selectedPlayer=selectedPlayer)
 
 @app.route('/data', methods=['GET'])
 def data():
@@ -82,7 +85,7 @@ def data():
 @app.route('/wSBPlot', methods=['GET', 'POST'])
 def wSBPlot():
     masterFig, _ = wSB_master_plot(
-            degToPlot=request.args.get('deg', default=-1, type=int), firstName=request.args.get('firstName', default=""), lastName=request.args.get('lastName', default=""))
+            degToPlot=request.args.get('deg', default=-1, type=int), fullName=request.args.get('fullName', default=""))
     img = BytesIO()
     masterFig.savefig(img)
     img.seek(0)

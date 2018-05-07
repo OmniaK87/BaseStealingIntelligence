@@ -2,18 +2,28 @@
 <html>
     <head>
         <title>Base Stealing Intelligence Data Table</title>
+        <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <style>
+        tr:nth-child(even) {background-color: #f2f2f2;}
+        tr:hover {background-color:#91a4c4;}
+        </style>
     </head>
 
     <body>
-        <form action="{{ url_for('index') }}" method="GET">
-                <p><input type = "submit" value = "Home" /></p>
-        </form>
-        <form action="{{ url_for('aboutBSIR') }}" method="GET">
-            <p><input type = "submit" value = "About BSIR" /></p>
-        </form>
-        <form action="{{ url_for('BSIRByPlayer') }}" method="GET">
-            <p><input type = "submit" value = "BSIR By Player" /></p>
-        </form>
+        <h1>Data for BSIR</h1>
+        <div style="width:100%">
+            <form action="{{ url_for('index') }}" method="GET", sytle="width:33.3%">
+                    <p><input type = "submit" value = "Home" /></p>
+            </form>
+            <form action="{{ url_for('aboutBSIR') }}" method="GET", sytle="width:33.3%">
+                <p><input type = "submit" value = "About BSIR" /></p>
+            </form>
+            <form action="{{ url_for('BSIRByPlayer') }}" method="GET", sytle="width:33.3%">
+                <p><input type = "submit" value = "BSIR By Player" /></p>
+            </form>
+        </div>
+        <hr size="10", color="black">
 
         <form action="{{ url_for('data') }}" >
             <label>Columns to Show (ctrl-click to select multiple)
@@ -39,8 +49,11 @@
             </label>
             <button type="submit">Submit Settings</button>
         </form>
+        <hr size="10", color="black">
 
         <p>Here is the data sorted by {{ sortBy }}</p>
-        <p>{{datahtml|safe}}</p>
+        <div class=table style="overflow:scroll;">
+            <p>{{datahtml|safe}}</p>
+        </div>
     </body>
 </html>

@@ -2,6 +2,8 @@
 <html>
     <head>
         <title>About BSIR</title>
+        <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     </head>
 
     <body>
@@ -15,6 +17,7 @@
         <form action="{{ url_for('data') }}" method="GET">
             <p><input type = "submit" value = "Data" /></p>
         </form>
+        <hr size="10", color="black">
 
         <p>Base Stealing Intelligence Runs BSIR is a statistic that aims to quantify the number of runs a player produces based on their base running intelligence alone.  It is closely tied to and based on weighted Stolen Bases wSB.  It is found by fitting a wSB(speed) function on the leagues wSB and speed data.  A players BSIR is the difference between their actual wSB and their predicted wSB based on their speed</p>
 
@@ -38,15 +41,15 @@
         <p>This is a plot of 436 player's weighted Stolen Bases from the 2017 season, against their top speed.  I have fit a series of polynomials to the data to see if I can come up with a trend line that could predict with relative accuracy what an average players wSB would be given their top speed.  They have decent correlation which is what my goal is.  The noise in the data is the BSIR that I am looking for. </p>
 
         <form action="{{ url_for('aboutBSIR') }}" >
-                <select name=selectedDeg>
-                    <option value ="{{selectedDeg}}" selected>{{selectedDeg}}</option>
-                    {% for degree in degrees %}
-                        <option value= "{{degree}}">{{degree}}</option>"
-                    {% endfor %}
-                    
-                </select>
-                <button type="submit">Polynomial Degree</button>
-            </form>
+            <select name=selectedDeg>
+                <option value ="{{selectedDeg}}" selected>{{selectedDeg}}</option>
+                {% for degree in degrees %}
+                    <option value= "{{degree}}">{{degree}}</option>"
+                {% endfor %}
+                
+            </select>
+            <button type="submit">Polynomial Degree</button>
+        </form>
         
         <img src="{{ url_for('BSIRLinePlot', deg=selectedDeg) }}" alt="Image Placeholder" width="50%">
         <p>Here is a visualization of what I am talking about.  The points on the graph are individual players, and the lines are their BSIRs.  On this graphic, green means they are doing better than their speed says they should, red means they are doing worse.</p>

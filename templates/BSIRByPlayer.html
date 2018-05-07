@@ -2,6 +2,8 @@
 <html>
     <head>
         <title>BSIR By Player</title>
+        <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     </head>
 
     <body>
@@ -15,6 +17,7 @@
         <form action="{{ url_for('data') }}" method="GET">
             <p><input type = "submit" value = "Data" /></p>
         </form>
+        <hr size="10", color="black">
         
         <p>Before playing around with the graphs, I would like to give you an example of the extremes of BSIR.  When using a 5th degree Polynomial, the player with the highest BSIR is Trea Turner.  </p>
 
@@ -25,7 +28,9 @@
 
         <p>On the flip side you have Alcides Escobar, who actually cost his team about 2.6 runs over the course of the season due to poor choices.</p>
         <img src="{{ url_for('BSIRLinePlot', deg = 5, fullName = "Alcides Escobar" ) }}" alt="Image Placeholder" width="50%">
-
+        
+        
+        <hr size="10", color="black">
 
         <form action="{{ url_for('BSIRByPlayer') }}" >
             <label>Polynomial Degree
@@ -37,10 +42,10 @@
                 </select>
             </label>
             <label>Player Selector
-                <select name=playerList method="GET" action="/">
+                <select name=selectedPlayer method="GET" action="/">
                     <option value ="{{selectedPlayer}}" selected>{{selectedPlayer}}</option>
                     {% for selectedPlayer in playerList %}
-                        <option value= "{{selectedPlayer}}" selected>{{selectedPlayer}}</option>"
+                        <option value= "{{selectedPlayer}}">{{selectedPlayer}}</option>"
                     {% endfor %}
                 </select>
             </label>
@@ -48,6 +53,9 @@
             <button type="submit">Submit Settings</button>
         </form>
 
+        <img src="{{ url_for('wSBPlot', deg=selectedDeg, fullName=selectedPlayer) }}" alt="Image Placeholder" width="50%">
+        <img src="{{ url_for('BSIRLinePlot', deg = selectedDeg, fullName = selectedPlayer ) }}" alt="Image Placeholder" width="50%">
+        <img src="{{ url_for('BSIRPlot', deg=selectedDeg, fullName=selectedPlayer) }}" alt="Image Placeholder" width="50%">
         
 
     </body>

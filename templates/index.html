@@ -2,22 +2,26 @@
 <html>
     <head>
         <title>Base Stealing Intelligence</title>
+        <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     </head>
 
     <body>
         <h1>Base Stealing Intelligence, Spring 2018 Sabermetrics </h1>
         <h3>Jake Mitchell</h3>
         <p>Welcome to my website for calculating a player's base stealing intelligence!  This is an exercise in seeing how well we can quantify how may runs a player produces by their base stealing intelligence alone.  I plan to do this by estimating how much of a player's weighted Stolen Bases (wSB) comes from their athletic ability first.  The difference between their actual wSB and this estimation will have to come from their smarts!  Explore around the website to learn more, I would start with the About BSIR page!</p>
+
             
-        
-        <form action="{{ url_for('aboutBSIR') }}" method="GET">
-            <p><input type = "submit" value = "About BSIR" /></p>
-        </form>
-        <form action="{{ url_for('data') }}" method="GET">
-            <p><input type = "submit" value = "Data" /></p>
-        </form>  
-        <form action="{{ url_for('BSIRByPlayer') }}" method="GET">
-            <p><input type = "submit" value = "BSIR By Player" /></p>
-        </form>
+        <div style="width:100%">
+            <form action="{{ url_for('aboutBSIR') }}" method="GET", sytle="width:33.3%">
+                <p><input type = "submit" value = "About BSIR" /></p>
+            </form>
+            <form action="{{ url_for('data') }}" method="GET", sytle="width:33.3%">
+                <p><input type = "submit" value = "Data" /></p>
+            </form>  
+            <form action="{{ url_for('BSIRByPlayer') }}" method="GET", sytle="width:33.3%">
+                <p><input type = "submit" value = "BSIR By Player" /></p>
+            </form>
+        </div>
     </body>
 </html>
