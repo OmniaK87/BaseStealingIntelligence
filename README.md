@@ -34,8 +34,11 @@ Where lgwSBbySpeed(speed) is a function that predicts wSB based on speed and lea
 
 
 ## How is BSIR useful?
+There have been tons of baseball fans who have tried to quantify different aspects of base running.  I believe that this is the first attempt at quantifying a player's base stealing instincts.  Scouts can see this pretty easily, but it has been very hard to quantify until we got the sprint data.  Since this is a new statistic, there is tons of experimenting to be done with it.  
 
+This is the kind of statistic that could be worth looking at over time.  For example as top base stealers age, they will lose some of their speed so we can expect their wSB to go down.  It is possible though that their BSIR would actually go up as they learn more about the game and develop their insincts.
 
+Another option with this statistic is to identify players who are not performing well mentally on the bases.  Coaches could focus on players with low BSIR to improve their stealing rate.  You can't improve a players speed by much, but teaching people is relatively easy.
 
 
 ## Findings
@@ -56,3 +59,7 @@ I next wanted to look at the outliers in the statistic to see if they line up wi
 On the flip side we have Alcides Escobar.  He has recently been touted as the "Replacement Level Player", as his stats are so near to the bottom of the league.  His poor instincts account for -2.483 of his -2.645 wSB.  The ironic thing is that he is actually one of the faster players in the league.  He just doesn't know how to use it!
 
 <img src="graphics/BSIRLinePlotAlcidesEscobar.png" width="600px" height="400px">
+
+
+## Extensions
+If I were to continue expanding on this statistic I would look into getting more data to improve my prediction functions.  While top speed is important in stealing bases, a player's acceleration matters a lot more.  A runner will only reach their top speed a few feet before the plate.  If I was able to get acceleration data, time between bases, or even their average lead off I could make this statistic a lot better.  While this would improve the inputs to theh function, if I wanted to improve the rating in general I would expand the y stat from just wSB all the way up to BsR.  This would allow me to quantify a players Base Running Intelligence, not just their Base Stealin Intelligence.
