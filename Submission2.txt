@@ -1,0 +1,4 @@
+Jake Mitchell Final Project Submission 2
+
+Github: https://github.com/OmniaK87/BaseRunningIntelligence
+Heroku app: https://base-stealing-intelligence.herokuapp.com/

@@ -6,3 +6,11 @@ source venv/Scripts/activate
 
 To deactivate the venv run
 deactivate
+
+
+Show the steps of calculating
+Comparison with other statistics
+	correlation score?
+Video 
+	Drawing graphs, and then website?
+ReadMe (3 pages)

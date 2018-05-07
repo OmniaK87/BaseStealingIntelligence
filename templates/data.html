@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Base Stealing Intelligence Data Table</title>
+    </head>
+
+    <body>
+        <form action="{{ url_for('index') }}" method="GET">
+                <p><input type = "submit" value = "Go To Home" /></p>
+        </form>
+        
+        <p>Here is the data that is used to build the graphs</p>
+        <p>{{datahtml|safe}}</p>
+    </body>
+</html>
